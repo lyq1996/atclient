@@ -2,7 +2,7 @@
 
 ## 适用于Linux
 * 可交叉编译至OpenWrt平台运行
-交叉编译教程: [这里](https://lyq1996.github.io/2017/02/22/build_mentohust_for_mips/)    
+交叉编译教程: [这里](https://lyq.blogd.club/2017/02/22/build-mentohust-for-mips/)    
 PS:虽然是交叉编译mentohust的,但原理是一样的
 
 ## 目前的进展
