@@ -1,7 +1,7 @@
 #include "atclient.h"
 #define SERVER_PORT_1 3848
-#define SERVER_PORT_2 3850	//not use yet
-#define SERVER_PORT_3 3849	//not use yet
+#define SERVER_PORT_2 3850
+#define SERVER_PORT_3 3849
 #define VERSION "atclient version:1.0.0"
 #define AUTHOR "Author: lyq1996"
 #define INIT_SERVER "1.1.1.8"
@@ -53,37 +53,93 @@ void check_arg(int argc, char **argv, struct infoset * const pinfo)
 	}
 }
 
-int Init(struct infoset * const pinfo)
+#ifdef __linux__
+int Init(struct infoset *const pinfo)
 {
 	int sockfd;
-	struct usrinfoSet *psu = pinfo -> psu;
-	
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+	struct usrinfoSet *psu = pinfo->psu;
+
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+	{
 		perror("[ERROR]");
 		exit(1);
 	}
 	struct ifreq addr;
 	memset(&addr, 0x0, sizeof addr);
-	strcpy(addr.ifr_name, psu -> dev);
-	if (ioctl(sockfd, SIOCGIFADDR, (char *)&addr) == -1) {
+	strcpy(addr.ifr_name, psu->dev);
+	if (ioctl(sockfd, SIOCGIFADDR, (char *)&addr) == -1)
+	{
 		perror("[ERROR]");
 		exit(1);
 	}
-
-	strcpy(psu -> local_ip, inet_ntoa(((struct sockaddr_in *)&addr.ifr_addr) -> sin_addr));
-
+	strcpy(psu->local_ip, inet_ntoa(((struct sockaddr_in *)&addr.ifr_addr)->sin_addr));
 	memset(&addr, 0, sizeof addr);
 	strcpy(addr.ifr_name, (*psu).dev);
 
-	if(ioctl(sockfd, SIOCGIFHWADDR, (char *)&addr) == -1) {
+	if (ioctl(sockfd, SIOCGIFHWADDR, (char *)&addr) == -1)
+	{
 		perror("[ERROR]");
 		exit(1);
 	}
-
-	memcpy(psu -> mac, addr.ifr_hwaddr.sa_data, 0x6);
+	memcpy(psu->mac, addr.ifr_hwaddr.sa_data, 0x6);
 	return sockfd;
 }
+#elif __APPLE__
+#include "TargetConditionals.h"
+#ifdef TARGET_OS_MAC
+#include <netinet/in.h>
+#include <net/if_dl.h>
+#include <ifaddrs.h>
+int Init(struct infoset *const pinfo)
+{
+	int sockfd;
+	struct usrinfoSet *psu = pinfo->psu;
 
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+	{
+		perror("[ERROR]");
+		exit(1);
+	}
+	struct ifreq addr;
+	memset(&addr, 0x0, sizeof addr);
+	strcpy(addr.ifr_name, psu->dev);
+	if (ioctl(sockfd, SIOCGIFADDR, (char *)&addr) == -1)
+	{
+		perror("[ERROR]");
+		exit(1);
+	}
+	strcpy(psu->local_ip, inet_ntoa(((struct sockaddr_in *)&addr.ifr_addr)->sin_addr));
+
+	struct ifaddrs *if_addrs = NULL;
+	struct ifaddrs *if_addr = NULL;
+	if (0 == getifaddrs(&if_addrs))
+	{
+		for (if_addr = if_addrs; if_addr != NULL; if_addr = if_addr->ifa_next)
+		{
+			if (strcmp(if_addr->ifa_name, addr.ifr_name) == 0)
+			{
+				if (if_addr->ifa_addr != NULL && if_addr->ifa_addr->sa_family == AF_LINK)
+				{
+					struct sockaddr_dl *sdl = (struct sockaddr_dl *)if_addr->ifa_addr;
+					if (6 == sdl->sdl_alen)
+					{
+						memcpy(psu->mac, LLADDR(sdl), sdl->sdl_alen);
+					}
+				}
+			}
+		}
+		freeifaddrs(if_addrs);
+		if_addrs = NULL;
+	}
+	else
+	{
+		perror("[ERROR]");
+		exit(1);
+	}
+	return sockfd;
+}
+#endif
+#endif
 void pktEncrypt(char *s, int len)
 {
 	if ( s != NULL && len > 0x0 ) {
@@ -395,7 +451,7 @@ void get_session(const char * const pkt, struct usrinfoSet * psu)
 		++ ppkt;
 		psu -> session = (char *)calloc(*ppkt + 1, sizeof(char));
 		strncpy(psu -> session, ppkt + 1, *ppkt);
-		printf("[atclient]:Session -> %s\n",psu -> session);
+		//printf("[atclient]:Session -> %s\n",psu -> session);
 }
 }
 
@@ -452,7 +508,7 @@ bool try_breathe(int sockfd, struct infoset * const pinfo ,long index){
 	*ppkt++ = 0x2f;
 	*ppkt++ = 0x06;
 	ppkt += 0x04;
-	printf("[atclient]:index -> %d %d %d %d",index_4,index_3,index_1,index_1);
+	//printf("[atclient]:index -> %d %d %d %d",index_4,index_3,index_1,index_1);
 
 	ComputeHash((unsigned char *)pkt + 2, (unsigned char *)pkt, pkt[1]);	//md5
 	pktEncrypt(pkt, pkt[1]);	//encrypt it
