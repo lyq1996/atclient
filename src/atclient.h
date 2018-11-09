@@ -10,6 +10,9 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "md5.h"
+#include <sys/time.h>
+#include <time.h>
+
 
 struct usrinfoSet{
 	char * usr;
