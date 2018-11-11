@@ -23,7 +23,7 @@ static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool 
 		exit(1);
 	}
 
-	struct usrinfoSet *pui = pinfo -> psu;
+	struct usrinfoSet *psu = pinfo -> psu;
 	int c, index = 0;
 	struct option options[] = {
 		{"username", 1, NULL, 'u'},
@@ -38,20 +38,20 @@ static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool 
 	{
 			switch (c) {
 				case 'u':
-					pui -> usr = optarg;
+					psu -> usr = optarg;
 					break;
 				case 'p':
-					pui -> pw = optarg;
+					psu -> pw = optarg;
 					break;
 				case 'd':
-					strcpy(pui -> dev, optarg);
+					strcpy(psu -> dev, optarg);
 					break;
 				case 'i':
-					strcpy(pui -> host_ip, optarg);
+					strcpy(psu -> host_ip, optarg);
 					* argv_icheck = true;
 					break;
 				case 's':
-					pui -> service = optarg;
+					psu -> service = optarg;
 					* argv_scheck = true;
 					break;
 				default:
@@ -69,7 +69,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	struct ifreq addr;
@@ -77,7 +77,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 	strcpy(addr.ifr_name, psu->dev);
 	if (ioctl(sockfd, SIOCGIFADDR, (char *)&addr) == -1)
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	strcpy(psu->local_ip, inet_ntoa(((struct sockaddr_in *)&addr.ifr_addr)->sin_addr));
@@ -86,7 +86,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 	strcpy(addr.ifr_name, psu -> dev);
 	if (ioctl(sockfd, SIOCGIFHWADDR, (char *)&addr) == -1)
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	memcpy(psu->mac, addr.ifr_hwaddr.sa_data, 0x6);
@@ -105,7 +105,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	struct ifreq addr;
@@ -113,7 +113,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 	strcpy(addr.ifr_name, psu->dev);
 	if (ioctl(sockfd, SIOCGIFADDR, (char *)&addr) == -1)
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	strcpy(psu->local_ip, inet_ntoa(((struct sockaddr_in *)&addr.ifr_addr)->sin_addr));
@@ -141,7 +141,7 @@ static void ip_mac_init(struct infoset *const pinfo)
 	}
 	else
 	{
-		perror("[DEVICE INIT]");
+		perror("device init");
 		exit(1);
 	}
 	close(sockfd);
@@ -154,7 +154,7 @@ static int socket_init(struct infoset *const pinfo){
 	struct sockaddr_in *pss = pinfo -> pss;
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 	{
-		perror("[SOCKET INIT]");
+		perror("socket init");
 		exit(1);
 	}
 	memset(pss, 0x0, sizeof(struct sockaddr_in));	//socket init
@@ -167,7 +167,7 @@ static int socket_init(struct infoset *const pinfo){
 	timeout.tv_usec = 0;
 
 	if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,sizeof(timeout)) < 0){
-			perror("[SOCKET INIT]");
+			perror("socket init");
 			exit(1);
 	}
 	return sockfd;
@@ -231,8 +231,8 @@ static bool get_server(struct infoset * const pinfo){
 	int sockfd;
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)
 	{
-		perror("[GET SERVER IP]");
-		exit(1);
+		perror("get server IP");
+		return false;
 	}
 
 //******************---------------socket init----------------***************//
@@ -246,15 +246,15 @@ static bool get_server(struct infoset * const pinfo){
 	timeout.tv_usec = 0;
 
 	if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout,sizeof(timeout)) < 0){
-			perror("[GET SERVER IP]");
-			exit(1);
+			perror("get server IP");
+			return false;
 	}
 //******************---------------socket init----------------***************//	
 	if ( sendto(sockfd, pkt, (size_t)(ppkt - pkt), 0, (struct sockaddr *)(pinfo -> pss), sizeof (struct sockaddr)) == -1 ) {
-			perror("[GET SERVER IP]");
+			perror("get server IP");
 			exit(1);
 		}
-	puts("[GET SERVER IP]:packet sended out");
+	puts("[get server IP]:sended out a UDP packet to auto find server IP address.");
 	free(pkt);
 	
 	int pkt_recv_size = 0x100;
@@ -264,14 +264,14 @@ static bool get_server(struct infoset * const pinfo){
 	int recvsize = recvfrom(sockfd, pkt_recv, pkt_recv_size, 0, (struct sockaddr *)(pinfo -> pss), &addrlen);
 	if ( recvsize < 0x0 )
 	{
-		puts("[GET SERVER IP]:Recvice size error!");
-		exit(1);
+		puts("[get server IP]:timeout.");
+		return false;
 	}
 	else 
 	{
 		if ( recvsize >= pkt_recv_size ) {
 			pkt_recv[pkt_recv_size - 1] = 0x0;
-			puts("[GET SERVER IP]:Recvice size error!");
+			puts("[get server IP]:Recvice size error!");
 			free(pkt_recv);
 			return false;
 		}
@@ -368,7 +368,7 @@ static bool get_server(struct infoset * const pinfo){
 			}
 		}
 	}
-	printf("[GET SERVER IP]:%s\n",psu -> host_ip);
+	printf("[get server IP]:%s\n",psu -> host_ip);
 	free(pkt_recv);
 	close(sockfd);
 	return true;
@@ -402,11 +402,11 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 	pktEncrypt(pkt, pkt[1]);
 	
 	if ( sendto(sockfd, pkt, (size_t)(ppkt - pkt), 0, (struct sockaddr *)(pinfo -> pss), sizeof (struct sockaddr)) == -1 ) {
-			perror("[GET SERVICE TYPE]");
-			exit(1);
+			perror("get service type");
+			return false;
 		}
 
-	puts("[GET SERVICE TYPE]:Packet sended out.");
+	puts("[get service type]:sended out a UDP packet to auto find service type.");
 	free(pkt);		
 	int pkt_recv_size = 0x1000;
 	char * const pkt_recv = (char *)calloc(pkt_recv_size, sizeof(char));
@@ -415,7 +415,7 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 	int recvsize = recvfrom(sockfd, pkt_recv, pkt_recv_size, 0, (struct sockaddr *)(pinfo -> pss), &addrlen);
 	if ( recvsize < 0x0 )
 	{
-		puts("[GET SERVICE TYPE]:Recvice size error!");
+		puts("[get service type]:timeout.");
 		free(pkt_recv);
 		return false;
 	}
@@ -423,7 +423,7 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 	{
 		if ( recvsize >= pkt_recv_size ) {
 			pkt_recv[pkt_recv_size - 1] = 0x0;
-			puts("[GET SERVICE TYPE]:Recvice size error!");
+			puts("[get service type]:recvice size error!");
 			free(pkt_recv);
 			return false;
 		}
@@ -437,16 +437,16 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 			++ppkt_s;
 			psu -> service = (char *)calloc(*ppkt_s - 1, sizeof(char));
 			strncpy(psu -> service, ppkt_s + 1, (*ppkt_s) -2 );
-			printf("[GET SERVICE TYPE]:%s\n",psu -> service);
+			printf("[get service type]:%s\n",psu -> service);
 		}
 		else if(* ppkt_s == 0xa){
 			++ppkt_s;
 			psu -> service = (char *)calloc(*ppkt_s - 1, sizeof(char));
-			puts("[GET SERVICE TYPE]:Error,please input service type:");
+			puts("[get service type]:service length error,please input service type:");
 			scanf("%s",psu ->service);
-		}
+			}
 		else{
-			puts("[GET SERVICE TYPE]:Get service type error,exited.");
+			puts("[get service type]:get service type error,exited.");
 			return false;
 		}		
 		free(pkt_recv);
@@ -509,10 +509,10 @@ static bool try_login(int sockfd, struct infoset * const pinfo){
 	pktEncrypt(pkt, pkt[1]);
 	
 	if (sendto(sockfd, pkt, (size_t)(ppkt - pkt), 0, (struct sockaddr *)(pinfo -> pss), sizeof (struct sockaddr)) == -1 ) {
-			perror("[LOGIN]");
+			perror("login");
 			exit(1);
 		}
-	puts("[LOGIN]:Packet sended out.");
+	puts("[login]:sended out a UDP packet to login.");
 	free(pkt);
 	
 	int pkt_recv_size = 0x1000;	//max recvice packet size
@@ -522,8 +522,8 @@ static bool try_login(int sockfd, struct infoset * const pinfo){
 	int recvsize = recvfrom(sockfd, pkt_recv, pkt_recv_size, 0, (struct sockaddr *)(pinfo -> pss), &addrlen);
 	if ( recvsize < 0x0 )
 	{
-		puts("[LOGIN]:Recvice size error!");
-		puts("[LOGIN]:Failed,retrying...");
+		puts("[login]:timeout.");
+		puts("[login]:retrying...");
 		free(pkt_recv);
 		return false;
 	}
@@ -531,8 +531,8 @@ static bool try_login(int sockfd, struct infoset * const pinfo){
 	{
 		if ( recvsize >= pkt_recv_size ) {
 			pkt_recv[pkt_recv_size - 1] = 0x0;
-			puts("[ERROR]:Recvice size error!");
-			puts("[LOGIN]:Failed,retrying...");
+			puts("[login]:recvice size error!");
+			puts("[login]:retrying...");
 			free(pkt_recv);
 			return false;
 		}
@@ -552,11 +552,11 @@ static bool try_login(int sockfd, struct infoset * const pinfo){
 			//printf("[atclient]:Session -> %s\n",psu -> session);
 		}
 		free(pkt_recv);
-		puts("[LOGIN]:Success!");
+		puts("[login]:success!");
 		return login_status;
 		}
 	else{
-		puts("[LOGIN]:Failed.\n[Reason]:Server rejected,retrying...");
+		puts("[login]:failed.\n[reason]:server rejected,retrying...");
 		free(pkt_recv);
 		return login_status;
 	}
@@ -619,10 +619,10 @@ static bool try_breathe(int sockfd, struct infoset * const pinfo ,unsigned int i
 	pktEncrypt(pkt, pkt[1]);
 	
 	if ( sendto(sockfd, pkt, (size_t)(ppkt - pkt), 0, (struct sockaddr *)(pinfo -> pss), sizeof (struct sockaddr)) == -1 ) {
-			perror("[ERROR]");
+			perror("keep online");
 			exit(1);
 		}
-	puts("[KEEP ONLINE]:Send a UDP packet to keep online.");
+	puts("[keep online]:send a UDP packet to keep online.");
 	free(pkt);
 	
 	int pkt_recv_size = 0x1000;	//max recvice packet size
@@ -632,8 +632,8 @@ static bool try_breathe(int sockfd, struct infoset * const pinfo ,unsigned int i
 	int recvsize = recvfrom(sockfd, pkt_recv, pkt_recv_size, 0, (struct sockaddr *)(pinfo -> pss), &addrlen);
 	if ( recvsize < 0x0 )
 	{
-		puts("[ERROR]:Recvice size error!\n");
-		puts("[KEEP ONLINE]:Failed,retrying...");
+		puts("[keep online]:timeout.");
+		puts("[keep online]:failed,retrying...");
 		free(pkt_recv);
 		return false;
 	}
@@ -641,8 +641,8 @@ static bool try_breathe(int sockfd, struct infoset * const pinfo ,unsigned int i
 	{
 		if ( recvsize >= pkt_recv_size ) {
 			pkt_recv[pkt_recv_size - 1] = 0x0;
-			puts("[ERROR]:Recvice Size Error!");
-			puts("[KEEP ONLINE]:Failed,retrying...");
+			puts("[keep online]:recvice size error.");
+			puts("[keep online]:failed,retrying...");
 			free(pkt_recv);
 			return false;
 		}
@@ -653,12 +653,12 @@ static bool try_breathe(int sockfd, struct infoset * const pinfo ,unsigned int i
 
 	bool login_status = (bool)pkt_recv[0x14];
 	if (login_status){
-		puts("[KEEP ONLINE]:Success");
+		puts("[keep online]:success");
 		free(pkt_recv);
 		return login_status;
 	}
 	else{
-		puts("[KEEP ONLINE]:Failed,retrying...");
+		puts("[keep online]:failed.\n[reason]:server rejected,retrying...");
 		free(pkt_recv);
 		return login_status;
 	}
@@ -689,8 +689,8 @@ extern int main(int argc, char *argv[])
 		int sockfd = socket_init(&info);
 		if(!argv_scheck){
 		bool search_service_status = get_service(sockfd, &info);
-		if(!search_service_status){
-			exit(1);
+			if(!search_service_status){
+				exit(1);
 			}
 		}
 		bool login_status = try_login(sockfd, &info);
