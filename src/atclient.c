@@ -440,7 +440,9 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 			printf("[GET SERVICE TYPE]:%s\n",psu -> service);
 		}
 		else if(* ppkt_s == 0xa){
-			puts("[GET SERVICE TYPE]:error,please input service type:");
+			++ppkt_s;
+			psu -> service = (char *)calloc(*ppkt_s - 1, sizeof(char));
+			puts("[GET SERVICE TYPE]:Error,please input service type:");
 			scanf("%s",psu ->service);
 		}
 		else{
