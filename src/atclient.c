@@ -309,9 +309,10 @@ static bool get_server(struct infoset * const pinfo){
 	ip_bytea3[0] = ip_byte3 / 100 + 0x30;
 	ip_bytea3[1] = (ip_byte3 - (ip_byte3 / 100 * 100))/ 10 + 0x30;
 	ip_bytea3[2] = ip_byte3 % 10 + 0x30;
-	ip_bytea4[0] = ip_byte3 / 100 + 0x30;
-	ip_bytea4[1] = (ip_byte3 - (ip_byte3 / 100 * 100))/ 10 + 0x30;
-	ip_bytea4[2] = ip_byte3 % 10 + 0x30;
+	ip_bytea4[0] = ip_byte4 / 100 + 0x30;
+	ip_bytea4[1] = (ip_byte4 - (ip_byte3 / 
+100 * 100))/ 10 + 0x30;
+	ip_bytea4[2] = ip_byte4 % 10 + 0x30;
 	
 	char *pti = psu -> host_ip;
 	for(int i=0;i<3;i++){
@@ -377,7 +378,6 @@ static bool get_server(struct infoset * const pinfo){
 static bool get_service(int sockfd, struct infoset * const pinfo){
 	char md5[0x10] = {0x0}, *pkt, *ppkt;
 	struct usrinfoSet *psu = pinfo -> psu;
-	struct sockaddr_in *pss = pinfo -> pss;
 	int maclen = 0x6, md5len = 0x10, sendbytes = 0x21;
 
 	pkt = (char *)calloc(sendbytes, sizeof(char));
