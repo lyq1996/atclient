@@ -281,7 +281,7 @@ static bool get_server(struct infoset * const pinfo){
 	memset(pkt_recv + 2, 0x0, md5len);
 
 	char * ppkt_i = pkt_recv;
-	int ip_index;
+	int ip_index = 0;
 	for(int i=0;i<pkt_recv[1];i++){
 		if(pkt_recv[i]==0x0c){
 			ip_index = i;
@@ -310,8 +310,7 @@ static bool get_server(struct infoset * const pinfo){
 	ip_bytea3[1] = (ip_byte3 - (ip_byte3 / 100 * 100))/ 10 + 0x30;
 	ip_bytea3[2] = ip_byte3 % 10 + 0x30;
 	ip_bytea4[0] = ip_byte4 / 100 + 0x30;
-	ip_bytea4[1] = (ip_byte4 - (ip_byte3 / 
-100 * 100))/ 10 + 0x30;
+	ip_bytea4[1] = (ip_byte4 - (ip_byte3 / 100 * 100))/ 10 + 0x30;
 	ip_bytea4[2] = ip_byte4 % 10 + 0x30;
 	
 	char *pti = psu -> host_ip;
@@ -441,7 +440,8 @@ static bool get_service(int sockfd, struct infoset * const pinfo){
 			printf("[GET SERVICE TYPE]:%s\n",psu -> service);
 		}
 		else if(* ppkt_s == 0xa){
-			scanf("Input your service type: %s",psu ->service);
+			puts("[GET SERVICE TYPE]:error,please input service type:");
+			scanf("%s",psu ->service);
 		}
 		else{
 			puts("[GET SERVICE TYPE]:Get service type error,exited.");
