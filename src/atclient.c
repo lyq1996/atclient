@@ -7,10 +7,10 @@
 static void usage()
 {
 	puts(VERSION);
-	puts("Usage:[Options]");
-	puts("\t-u | --username\n\t\tUser name");
-	puts("\t-p | --password\n\t\tUser password");
-	puts("\t-d | --device\n\t\tNetwork card interface");
+	puts("ssage:[Options]");
+	puts("\t-u | --username\n\t\tUser name[must]");
+	puts("\t-p | --password\n\t\tUser password[must]");
+	puts("\t-d | --device\n\t\tNetwork card interface[must]");
 	puts("\t-i | --host\n\t\tServer IP");
 	puts("\t-s | --service\n\t\tService type");
 	exit(1);
@@ -18,11 +18,9 @@ static void usage()
 
 static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool * argv_scheck, bool * argv_icheck)
 {
-	if(argc < 7){
+	/*if(argc < 7){
 		usage();
-		exit(1);
-	}
-
+	}*/
 	struct usrinfoSet *psu = pinfo -> psu;
 	int c, index = 0;
 	struct option options[] = {
@@ -33,18 +31,24 @@ static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool 
 		{"service",1,NULL,'s'},
 		{NULL, 0, NULL, 0}
 	};
+	bool uexist = false;
+	bool pexist = false;
+	bool dexist = false;
 
 	while ((c = getopt_long(argc, argv, "u:p:d:i:s:", options, &index)) != -1)
 	{
 			switch (c) {
 				case 'u':
 					psu -> usr = optarg;
+					uexist = true;
 					break;
 				case 'p':
 					psu -> pw = optarg;
+					pexist = true;
 					break;
 				case 'd':
 					strcpy(psu -> dev, optarg);
+					dexist = true;
 					break;
 				case 'i':
 					strcpy(psu -> host_ip, optarg);
@@ -58,6 +62,10 @@ static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool 
 					usage();
 					break;
 		}
+	}
+	if(!(uexist && pexist && dexist)){
+		puts("must have -u -p -d.\neg:atclient -u lyq1995 -p 123456 -d en0.");
+		usage();
 	}
 }
 
