@@ -7,7 +7,7 @@
 static void usage()
 {
 	puts(VERSION);
-	puts("ssage:[Options]");
+	puts("Usage:[Options]");
 	puts("\t-u | --username\n\t\tUser name[must]");
 	puts("\t-p | --password\n\t\tUser password[must]");
 	puts("\t-d | --device\n\t\tNetwork card interface[must]");
@@ -64,7 +64,7 @@ static void check_arg(int argc, char **argv, struct infoset * const pinfo, bool 
 		}
 	}
 	if(!(uexist && pexist && dexist)){
-		puts("must have -u -p -d.\neg:atclient -u lyq1995 -p 123456 -d en0.");
+		puts("Must have -u -p -d.\neg:atclient -u lyq1996 -p 123456 -d en0.");
 		usage();
 	}
 }
