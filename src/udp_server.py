@@ -104,7 +104,7 @@ def generate_brea_ret():
 
 def main():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.bind(("127.0.0.1", 3850))
+    s.bind(("127.0.0.1", 3848))
 
     while True:
         data, addr = s.recvfrom(1024)
