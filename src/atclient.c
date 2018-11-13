@@ -301,6 +301,7 @@ static bool get_server(struct infoset *const pinfo)
 		if (pkt_recv[i] == 0x0c)
 		{
 			ip_index = i;
+			break;
 		}
 	}
 	ppkt_i += ip_index;
@@ -458,7 +459,7 @@ static bool get_service(int sockfd, struct infoset *const pinfo)
 	{
 		++ppkt_s;
 		psu->service = (char *)calloc(*ppkt_s - 1, sizeof(char));
-		strncpy(psu->service, ppkt_s + 1, (*ppkt_s) - 2);
+		strncpy(psu->service, ppkt_s + 1, *ppkt_s - 2);
 		printf("[get service type]:%s\n", psu->service);
 	}
 	else if (*ppkt_s == 0xa)
@@ -572,11 +573,17 @@ static bool try_login(int sockfd, struct infoset *const pinfo)
 			++ppkt_s;
 			psu->session = (char *)calloc(*ppkt_s + 1, sizeof(char));
 			strncpy(psu->session, ppkt_s + 1, *ppkt_s);
-			//printf("[atclient]:Session -> %s\n",psu -> session);
+			//printf("[atclient]:Session ->%d, %s\n", *ppkt_s, psu->session);
+			free(pkt_recv);
+			puts("[login]:success!");
+			return login_status;
 		}
-		free(pkt_recv);
-		puts("[login]:success!");
-		return login_status;
+		else
+		{
+			free(pkt_recv);
+			puts("[login]:success but have't get session,retrying...");
+			return false;
+		}
 	}
 	else
 	{
@@ -663,16 +670,13 @@ static bool try_breathe(int sockfd, struct infoset *const pinfo, unsigned int in
 		free(pkt_recv);
 		return false;
 	}
-	else
+	else if (recvsize >= pkt_recv_size)
 	{
-		if (recvsize >= pkt_recv_size)
-		{
-			pkt_recv[pkt_recv_size - 1] = 0x0;
-			puts("[keep online]:recvice size error.");
-			puts("[keep online]:failed,retrying...");
-			free(pkt_recv);
-			return false;
-		}
+		pkt_recv[pkt_recv_size - 1] = 0x0;
+		puts("[keep online]:recvice size error.");
+		puts("[keep online]:failed,retrying...");
+		free(pkt_recv);
+		return false;
 	}
 	pktDecrypt(pkt_recv, pkt_recv_size);
 	memcpy(md5, pkt_recv + 2, md5len);
