@@ -1,7 +1,7 @@
 #include "atclient.h"
 #define SERVER_PORT_1 3848
 #define SERVER_PORT_2 3850
-#define VERSION "Version:1.0.1"
+#define VERSION "Version:2.0.0"
 #define INIT_SERVER "1.1.1.8"
 
 static void usage()
